@@ -1,0 +1,8 @@
+# Personal configuration (copy config.example.sh -> config.sh)
+config.sh
+
+# Build / runtime artifacts
+*.log
+AppleInterfaceThemeObserver
+*.o
+.DS_Store
