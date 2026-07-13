@@ -62,6 +62,6 @@ echo
 echo "Installed and loaded."
 echo "Test it: toggle System Settings > Appearance between Light and Dark."
 echo
-echo "Reminder: '$DARK_PROFILE' and '$LIGHT_PROFILE' must be imported into"
-echo "Terminal (Terminal > Settings > Profiles). Edit config.sh and re-run if"
+echo "Reminder: '$DARK_PROFILE' and '$LIGHT_PROFILE' must exist in"
+echo "Terminal.app (Terminal > Settings > Profiles). Edit config.sh and re-run if"
 echo "your profile names differ."
