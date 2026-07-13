@@ -55,15 +55,7 @@ Installed files live under `~/Library/Application Support/macos-terminal-appeara
 ./uninstall.sh
 ```
 
-This unloads the agent and removes the installed files. The Terminal profiles
-you imported are left in place — delete them in Terminal → Settings → Profiles
-if you no longer want them.
-
-## Limitations
-
-- Profiles must be imported once and named to match `config.sh`.
-- Existing windows and new ones both follow (new windows via Terminal's
-  "default settings", which the switcher updates on each change).
+This unloads the agent and removes the installed files.
 
 ## License
 
