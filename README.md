@@ -16,7 +16,7 @@ your open windows within a fraction of a second.
 
 ## Quick start
 
-1. Ensure your two target profiles already exist in Terminal (built-in or imported via Terminal → Settings → Profiles → ⚙️ → Import…). This project does not create profiles; it only switches between existing profile names.
+1. Ensure your two target profiles already exist in Terminal (built-in or imported via Terminal → Settings → Profiles → ⚙️ → Import…).
 2. Configure the profile names:
    ```sh
    cp config.example.sh config.sh
