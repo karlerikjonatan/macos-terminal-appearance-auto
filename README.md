@@ -50,13 +50,6 @@ resident observer is needed:
 Installed files live under `~/Library/Application Support/macos-terminal-appearance-auto/`
 (`AppleInterfaceThemeObserver`, `sync-terminal-profile.sh`, `config`, `observer.log`).
 
-## Customising
-
-- **Profile names / label**: edit `config.sh` and re-run `./install.sh`.
-- **Switching logic**: edit `src/sync-terminal-profile.sh` and re-run `./install.sh`.
-- **Observer behaviour**: edit `src/AppleInterfaceThemeObserver.swift` and re-run `./install.sh`
-  (it recompiles).
-
 ## Uninstall
 
 ```sh
@@ -69,8 +62,6 @@ if you no longer want them.
 
 ## Limitations
 
-- Terminal.app only; iTerm2, Ghostty, WezTerm and Kitty have native
-  appearance-following and don't need this.
 - Profiles must be imported once and named to match `config.sh`.
 - Existing windows and new ones both follow (new windows via Terminal's
   "default settings", which the switcher updates on each change).
