@@ -12,12 +12,11 @@ your open windows within a fraction of a second.
 
 - macOS
 - Xcode Command Line Tools (for `swiftc` — run `xcode-select --install` if needed)
-- Two Terminal profiles you want to switch between (one dark, one light),
-  already imported into **Terminal → Settings → Profiles**
+- Two Terminal profiles you want to switch between (one dark, one light) that already exist in **Terminal.app** (built-in or imported in **Terminal → Settings → Profiles**)
 
 ## Quick start
 
-1. Import your two profiles into Terminal (Terminal → Settings → Profiles → ⚙️ → Import…).
+1. Ensure your two target profiles already exist in Terminal (built-in or imported via Terminal → Settings → Profiles → ⚙️ → Import…). This project does not create profiles; it only switches between existing profile names.
 2. Configure the profile names:
    ```sh
    cp config.example.sh config.sh
