@@ -14,13 +14,16 @@ fi
 : "${DARK_PROFILE:?DARK_PROFILE not set (missing config?)}"
 : "${LIGHT_PROFILE:?LIGHT_PROFILE not set (missing config?)}"
 
-if [ "$(defaults read -g AppleInterfaceStyle 2>/dev/null)" = "Dark" ]; then
+STYLE="$(defaults read -g AppleInterfaceStyle 2>/dev/null)"
+if [ "$STYLE" = "Dark" ]; then
     PROFILE="$DARK_PROFILE"
 else
     PROFILE="$LIGHT_PROFILE"
 fi
 
-/usr/bin/osascript <<EOF
+echo "$(date '+%Y-%m-%d %H:%M:%S.%3N') sync: AppleInterfaceStyle='$STYLE' -> profile='$PROFILE'"
+
+OUT="$(/usr/bin/osascript <<EOF 2>&1
 tell application "System Events"
     set isRunning to (exists (processes whose name is "Terminal"))
 end tell
@@ -35,3 +38,8 @@ if isRunning then
     end tell
 end if
 EOF
+)"
+STATUS=$?
+if [ -n "$OUT" ] || [ "$STATUS" -ne 0 ]; then
+    echo "$(date '+%Y-%m-%d %H:%M:%S.%3N') osascript exit=$STATUS output: $OUT"
+fi
