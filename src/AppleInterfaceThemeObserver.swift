@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 
 // Long-lived observer: listens for the macOS light/dark appearance-change
@@ -32,6 +33,19 @@ center.addObserver(
     // re-applying the same profile twice is harmless.
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: syncTerminalProfile)
     DispatchQueue.main.asyncAfter(deadline: .now() + 2.5, execute: syncTerminalProfile)
+}
+
+// AppleInterfaceThemeChangedNotification is a live, unqueued distributed notification:
+// if the scheduled Auto light/dark switch happens while the Mac is asleep (as it often
+// does, e.g. overnight), the notification is lost and never redelivered. Catch that up by
+// re-syncing on every wake, in addition to the live notification above.
+NSWorkspace.shared.notificationCenter.addObserver(
+    forName: NSWorkspace.didWakeNotification,
+    object: nil,
+    queue: .main
+) { _ in
+    print("\(Date()) system woke from sleep")
+    syncTerminalProfile()
 }
 
 // Sync once at startup so the profile is correct even if appearance changed
