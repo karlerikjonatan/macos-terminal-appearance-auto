@@ -12,11 +12,65 @@ setvbuf(stdout, nil, _IOLBF, 0)
 let syncTerminalProfileScript = ("~/Library/Application Support/macos-terminal-appearance-auto/sync-terminal-profile.sh" as NSString)
     .expandingTildeInPath
 
-func syncTerminalProfile() {
+var activeSync: Process?
+var lastSyncedStyle: String?
+var pendingForcedSync = false
+
+func syncTerminalProfile(force: Bool = false) {
+    guard activeSync == nil else {
+        pendingForcedSync = pendingForcedSync || force
+        return
+    }
+    if force {
+        lastSyncedStyle = nil
+    }
+
+    guard CFPreferencesSynchronize(
+        kCFPreferencesAnyApplication, kCFPreferencesCurrentUser, kCFPreferencesAnyHost
+    ) else {
+        print("\(Date()) could not refresh system appearance preference")
+        return
+    }
+    let preference = CFPreferencesCopyValue(
+        "AppleInterfaceStyle" as CFString,
+        kCFPreferencesAnyApplication, kCFPreferencesCurrentUser, kCFPreferencesAnyHost
+    )
+    let style: String
+    if let preference = preference {
+        guard let value = preference as? String, value == "Dark" else {
+            print("\(Date()) unexpected system appearance preference: \(preference)")
+            return
+        }
+        style = "Dark"
+    } else {
+        style = "Light"
+    }
+    guard force || style != lastSyncedStyle else { return }
+
     let p = Process()
     p.executableURL = URL(fileURLWithPath: "/bin/bash")
-    p.arguments = [syncTerminalProfileScript]
-    try? p.run()
+    p.arguments = [syncTerminalProfileScript, style]
+    p.terminationHandler = { process in
+        DispatchQueue.main.async {
+            if process.terminationStatus == 0 {
+                lastSyncedStyle = style
+            } else {
+                lastSyncedStyle = nil
+                print("\(Date()) profile sync failed with exit status \(process.terminationStatus)")
+            }
+            activeSync = nil
+            if pendingForcedSync {
+                pendingForcedSync = false
+                syncTerminalProfile(force: true)
+            }
+        }
+    }
+    do {
+        try p.run()
+        activeSync = p
+    } catch {
+        print("\(Date()) could not start profile sync: \(error)")
+    }
 }
 
 let center = DistributedNotificationCenter.default()
@@ -30,9 +84,9 @@ center.addObserver(
     // a short delay makes the `defaults read` in sync-terminal-profile.sh reliable
     // for a manual toggle. Automatic (schedule-based) switches have been observed
     // to update the key more slowly, so re-sync again a bit later as a safety net;
-    // re-applying the same profile twice is harmless.
-    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: syncTerminalProfile)
-    DispatchQueue.main.asyncAfter(deadline: .now() + 2.5, execute: syncTerminalProfile)
+    // unchanged appearance does not trigger another AppleScript call.
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { syncTerminalProfile() }
+    DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { syncTerminalProfile() }
 }
 
 // AppleInterfaceThemeChangedNotification is a live, unqueued distributed notification:
@@ -45,11 +99,19 @@ NSWorkspace.shared.notificationCenter.addObserver(
     queue: .main
 ) { _ in
     print("\(Date()) system woke from sleep")
-    syncTerminalProfile()
+    syncTerminalProfile(force: true)
 }
 
 // Sync once at startup so the profile is correct even if appearance changed
 // while the agent wasn't running.
-syncTerminalProfile()
+syncTerminalProfile(force: true)
+
+// Scheduled Auto changes can happen without a distributed notification, even
+// while awake. Reconcile periodically instead of relying on notifications alone.
+let reconciliationTimer = Timer(timeInterval: 30, repeats: true) { _ in
+    syncTerminalProfile()
+}
+reconciliationTimer.tolerance = 3
+RunLoop.main.add(reconciliationTimer, forMode: .common)
 
 RunLoop.main.run()
