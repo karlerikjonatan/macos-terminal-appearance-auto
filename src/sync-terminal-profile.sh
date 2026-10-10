@@ -14,7 +14,14 @@ fi
 : "${DARK_PROFILE:?DARK_PROFILE not set (missing config?)}"
 : "${LIGHT_PROFILE:?LIGHT_PROFILE not set (missing config?)}"
 
-STYLE="$(defaults read -g AppleInterfaceStyle 2>/dev/null)"
+if [ "$#" -eq 0 ]; then
+    STYLE="$(defaults read -g AppleInterfaceStyle 2>/dev/null)"
+elif [ "$#" -eq 1 ] && { [ "$1" = "Dark" ] || [ "$1" = "Light" ]; }; then
+    STYLE="$1"
+else
+    echo "usage: $0 [Dark|Light]" >&2
+    exit 2
+fi
 if [ "$STYLE" = "Dark" ]; then
     PROFILE="$DARK_PROFILE"
 else
@@ -43,3 +50,4 @@ STATUS=$?
 if [ -n "$OUT" ] || [ "$STATUS" -ne 0 ]; then
     echo "$(date '+%Y-%m-%d %H:%M:%S.%3N') osascript exit=$STATUS output: $OUT"
 fi
+exit "$STATUS"

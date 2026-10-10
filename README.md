@@ -6,7 +6,9 @@ macOS switches between Dark and Light appearance.
 Terminal.app has no built-in way to follow the system appearance. This is a
 tiny background observer that does: it listens for the system's
 appearance-change notification and re-applies the matching Terminal profile to
-your open windows within a fraction of a second.
+your open windows. Notification-driven changes normally apply within a fraction
+of a second; scheduled Auto changes are also caught by an appearance check every
+30 seconds (with up to 3 seconds of timer tolerance).
 
 ## Requirements
 
@@ -36,8 +38,16 @@ resident observer is needed:
 
 - **`src/AppleInterfaceThemeObserver.swift`** — compiled to a binary that subscribes to the
   `AppleInterfaceThemeChangedNotification` distributed notification. On each
-  change (and once at startup) it runs `sync-terminal-profile.sh`.
-- **`src/sync-terminal-profile.sh`** — reads the current appearance (`AppleInterfaceStyle`) and
+  notification and every 30 seconds it checks `AppleInterfaceStyle` in-process.
+  It runs `sync-terminal-profile.sh` only when appearance differs from the last
+  successful sync, and forces a sync at startup and on wake. Failed syncs are
+  retried at the next check. The periodic check catches scheduled Auto changes
+  that macOS may not announce without launching subprocesses when appearance is
+  unchanged. Checks do not wake a sleeping Mac; timer tolerance lets macOS
+  coalesce wakeups. Manually selected tab profiles remain until appearance
+  changes or a startup/wake sync occurs.
+- **`src/sync-terminal-profile.sh`** — accepts the detected appearance from the
+  observer (or reads `AppleInterfaceStyle` when run without an argument) and
   applies the matching profile to every open Terminal window via AppleScript.
   It only acts if Terminal is already running, so it never launches Terminal on
   its own.
@@ -48,6 +58,21 @@ resident observer is needed:
 
 Installed files live under `~/Library/Application Support/macos-terminal-appearance-auto/`
 (`AppleInterfaceThemeObserver`, `sync-terminal-profile.sh`, `config`, `observer.log`).
+
+## Troubleshooting
+
+If Terminal stays on the opposite appearance after a scheduled Auto change,
+update the source and re-run `./install.sh` to rebuild and reload the observer.
+Keep your profile names in `config.sh`; if it is missing, recover them from
+`~/Library/Application Support/macos-terminal-appearance-auto/config` before
+installing, otherwise the example profile names will be used.
+
+The periodic check should catch up in about 30 seconds once macOS updates its
+appearance preference. Check `observer.log` in the installed directory for the
+detected `AppleInterfaceStyle`, selected profile, and any AppleScript errors.
+If the selected profile is correct but Terminal does not change, confirm that
+the profile exists and check **System Settings → Privacy & Security → Automation**
+for denied Terminal or System Events access.
 
 ## Uninstall
 
